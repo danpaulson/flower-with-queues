@@ -4,6 +4,7 @@ import time
 from tornado import web
 
 from ..options import options
+from ..utils.broker import Broker
 from ..views import BaseHandler
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,30 @@ class WorkersView(BaseHandler):
 
             for name in offline_workers:
                 workers.pop(name)
+
+        # Fetch queue lengths from the broker and attach to each worker
+        try:
+            app = self.application
+            http_api = None
+            if app.transport == 'amqp' and app.options.broker_api:
+                http_api = app.options.broker_api
+
+            broker = Broker(app.capp.connection(connect_timeout=1.0).as_uri(include_password=True),
+                            http_api=http_api, broker_options=self.capp.conf.broker_transport_options,
+                            broker_use_ssl=self.capp.conf.broker_use_ssl)
+
+            all_queue_names = self.get_active_queue_names()
+            queue_stats = await broker.queues(all_queue_names)
+            queue_lengths = {q['name']: q.get('messages', 0) for q in queue_stats}
+
+            for name, info in workers.items():
+                worker_info = app.workers.get(name, {})
+                worker_queues = [q['name'] for q in worker_info.get('active_queues', [])]
+                info['queue_length'] = sum(queue_lengths.get(q, 0) for q in worker_queues)
+        except Exception as e:
+            logger.error("Failed to fetch queue lengths: %s", e)
+            for info in workers.values():
+                info.setdefault('queue_length', 0)
 
         if json:
             self.write(dict(data=list(workers.values())))

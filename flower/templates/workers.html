@@ -14,6 +14,7 @@
           <th class="text-center">Status</th>
           <th class="text-center">Active</th>
           <th class="text-center">Processed</th>
+          <th class="text-center">Queue</th>
           <th class="text-center">Failed</th>
           <th class="text-center">Succeeded</th>
           <th class="text-center">Retried</th>
@@ -27,6 +28,7 @@
           <td>{{ info.get('status', None) }}</td>
           <td>{{ info.get('active', 0) or 0 }}</td>
           <td>{{ info.get('task-received', 0) }}</td>
+          <td>{{ info.get('queue_length', 0) }}</td>
           <td>{{ info.get('task-failed', 0) }}</td>
           <td>{{ info.get('task-succeeded', 0) }}</td>
           <td>{{ info.get('task-retried', 0) }}</td>
@@ -37,6 +39,7 @@
       <tfoot>
         <tr>
           <th>Total</th>
+          <th></th>
           <th></th>
           <th></th>
           <th></th>
