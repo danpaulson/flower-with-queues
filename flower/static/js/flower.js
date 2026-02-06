@@ -445,7 +445,7 @@ var flower = (function () {
             ],
             footerCallback: function( tfoot, data, start, end, display ) {
                 var api = this.api();
-                var columns = {2:"STARTED", 3:"", 4:"FAILURE", 5:"SUCCESS", 6:"RETRY"};
+                var columns = {2:"STARTED", 3:"", 4:"", 5:"FAILURE", 6:"SUCCESS", 7:"RETRY"};
                 for (const [column, state] of Object.entries(columns)) {
                     var total = api.column(column).data().reduce(sum, 0);
                     var footer = total;
@@ -489,24 +489,30 @@ var flower = (function () {
                 defaultContent: 0
             }, {
                 targets: 4,
-                data: 'task-failed',
+                data: 'queue_length',
                 className: "text-center",
                 width: "10%",
                 defaultContent: 0
             }, {
                 targets: 5,
-                data: 'task-succeeded',
+                data: 'task-failed',
                 className: "text-center",
                 width: "10%",
                 defaultContent: 0
             }, {
                 targets: 6,
-                data: 'task-retried',
+                data: 'task-succeeded',
                 className: "text-center",
                 width: "10%",
                 defaultContent: 0
             }, {
                 targets: 7,
+                data: 'task-retried',
+                className: "text-center",
+                width: "10%",
+                defaultContent: 0
+            }, {
+                targets: 8,
                 data: 'loadavg',
                 width: "10%",
                 className: "text-center text-nowrap",
