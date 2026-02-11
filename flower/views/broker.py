@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from tornado import web
@@ -12,6 +13,14 @@ class BrokerView(BaseHandler):
     @web.authenticated
     async def get(self):
         app = self.application
+
+        # Await inspector so active_queues data is available before rendering
+        try:
+            futures = app.update_workers()
+            if futures:
+                await asyncio.gather(*futures, return_exceptions=True)
+        except Exception as e:
+            logger.exception('Failed to update workers: %s', e)
 
         http_api = None
         if app.transport == 'amqp' and app.options.broker_api:

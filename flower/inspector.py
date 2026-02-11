@@ -45,4 +45,4 @@ class Inspector:
             return
         for worker, response in result.items():
             if response is not None:
-                self.io_loop.add_callback(partial(self._on_update, worker, method, response))
+                self._on_update(worker, method, response)

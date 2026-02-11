@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 
@@ -14,7 +15,9 @@ class WorkerView(BaseHandler):
     @web.authenticated
     async def get(self, name):
         try:
-            self.application.update_workers(workername=name)
+            futures = self.application.update_workers(workername=name)
+            if futures:
+                await asyncio.gather(*futures, return_exceptions=True)
         except Exception as e:
             logger.error(e)
 
@@ -36,11 +39,13 @@ class WorkersView(BaseHandler):
 
         events = self.application.events.state
 
-        if refresh:
-            try:
-                self.application.update_workers()
-            except Exception as e:
-                logger.exception('Failed to update workers: %s', e)
+        # Await inspector so active_queues data is available before rendering
+        try:
+            futures = self.application.update_workers()
+            if futures:
+                await asyncio.gather(*futures, return_exceptions=True)
+        except Exception as e:
+            logger.exception('Failed to update workers: %s', e)
 
         workers = {}
         for name, values in events.counter.items():
