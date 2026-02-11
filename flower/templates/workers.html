@@ -15,9 +15,6 @@
           <th class="text-center">Active</th>
           <th class="text-center">Processed</th>
           <th class="text-center">Queue</th>
-          <th class="text-center">Avg 10</th>
-          <th class="text-center">Avg 100</th>
-          <th class="text-center">Avg 1000</th>
           <th class="text-center">Failed</th>
           <th class="text-center">Succeeded</th>
           <th class="text-center">Retried</th>
@@ -32,9 +29,6 @@
           <td>{{ info.get('active', 0) or 0 }}</td>
           <td>{{ info.get('task-received', 0) }}</td>
           <td>{{ info.get('queue_length', 0) }}</td>
-          <td>{{ str(info['avg_response_10']) + 's' if info.get('avg_response_10') is not None else 'N/A' }}</td>
-          <td>{{ str(info['avg_response_100']) + 's' if info.get('avg_response_100') is not None else 'N/A' }}</td>
-          <td>{{ str(info['avg_response_1000']) + 's' if info.get('avg_response_1000') is not None else 'N/A' }}</td>
           <td>{{ info.get('task-failed', 0) }}</td>
           <td>{{ info.get('task-succeeded', 0) }}</td>
           <td>{{ info.get('task-retried', 0) }}</td>
@@ -45,9 +39,6 @@
       <tfoot>
         <tr>
           <th>Total</th>
-          <th></th>
-          <th></th>
-          <th></th>
           <th></th>
           <th></th>
           <th></th>

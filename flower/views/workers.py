@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import time
-from collections import defaultdict
 
 from tornado import web
 
@@ -44,7 +43,12 @@ class WorkersView(BaseHandler):
         try:
             futures = self.application.update_workers()
             if futures:
-                await asyncio.gather(*futures, return_exceptions=True)
+                await asyncio.wait_for(
+                    asyncio.gather(*futures, return_exceptions=True),
+                    timeout=5.0
+                )
+        except asyncio.TimeoutError:
+            logger.warning('Inspector timed out, using cached worker data')
         except Exception as e:
             logger.exception('Failed to update workers: %s', e)
 
@@ -96,38 +100,6 @@ class WorkersView(BaseHandler):
             logger.error("Failed to fetch queue lengths: %s", e)
             for info in workers.values():
                 info.setdefault('queue_length', 0)
-
-        # Compute per-queue average response times
-        queue_tasks = defaultdict(list)
-        for task_id, task in events.tasks.items():
-            if task.state == 'SUCCESS' and task.received and task.succeeded:
-                queue_name = task.routing_key or 'default'
-                response_time = task.succeeded - task.received
-                queue_tasks[queue_name].append((task.succeeded, response_time))
-
-        queue_response_times = {}
-        for queue_name, tasks in queue_tasks.items():
-            tasks.sort(key=lambda t: t[0], reverse=True)
-            times = [t[1] for t in tasks]
-            queue_response_times[queue_name] = {}
-            for n in (10, 100, 1000):
-                subset = times[:n]
-                if subset:
-                    queue_response_times[queue_name][n] = round(sum(subset) / len(subset), 2)
-                else:
-                    queue_response_times[queue_name][n] = None
-
-        for name, info in workers.items():
-            worker_info = self.application.workers.get(name, {})
-            worker_queues = [q['name'] for q in worker_info.get('active_queues', [])]
-            for n in (10, 100, 1000):
-                avgs = [queue_response_times[q][n]
-                        for q in worker_queues
-                        if q in queue_response_times and queue_response_times[q][n] is not None]
-                if avgs:
-                    info[f'avg_response_{n}'] = round(sum(avgs) / len(avgs), 2)
-                else:
-                    info[f'avg_response_{n}'] = None
 
         if json:
             self.write(dict(data=list(workers.values())))
