@@ -528,10 +528,15 @@ var flower = (function () {
             }, ],
         });
 
-        var autorefresh_interval = $.urlParam('autorefresh') || 1;
+        var autorefresh_interval = $.urlParam('autorefresh') || 5;
         if (autorefresh !== 0) {
+            var reloading = false;
             setInterval( function () {
-                $('#workers-table').DataTable().ajax.reload(null, false);
+                if (reloading) return;
+                reloading = true;
+                $('#workers-table').DataTable().ajax.reload(function () {
+                    reloading = false;
+                }, false);
             }, autorefresh_interval * 1000);
         }
 

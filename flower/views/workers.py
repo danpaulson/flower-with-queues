@@ -39,16 +39,9 @@ class WorkersView(BaseHandler):
 
         events = self.application.events.state
 
-        # Await inspector so active_queues data is available before rendering
+        # Fire off inspector update in the background; use cached data for rendering
         try:
-            futures = self.application.update_workers()
-            if futures:
-                await asyncio.wait_for(
-                    asyncio.gather(*futures, return_exceptions=True),
-                    timeout=5.0
-                )
-        except asyncio.TimeoutError:
-            logger.warning('Inspector timed out, using cached worker data')
+            self.application.update_workers()
         except Exception as e:
             logger.exception('Failed to update workers: %s', e)
 
