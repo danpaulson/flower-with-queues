@@ -528,7 +528,7 @@ var flower = (function () {
             }, ],
         });
 
-        var autorefresh_interval = $.urlParam('autorefresh') || 5;
+        var autorefresh_interval = $.urlParam('autorefresh') || 1;
         if (autorefresh !== 0) {
             var reloading = false;
             setInterval( function () {
