@@ -17,6 +17,10 @@ define("debug", default=False,
        help="run in debug mode", type=bool)
 define("inspect_timeout", default=1000.0, type=float,
        help="inspect timeout (in milliseconds)")
+define("inspect_interval", default=60000, type=int,
+       help="re-inspect every worker this often (in milliseconds); 0 disables. "
+            "Keeps active_queues (the Broker page, the Queue column) current "
+            "after a deploy without inspecting on every Workers-page poll")
 define("auth", default='', type=str,
        help="regexp of emails to grant access")
 define("basic_auth", type=str, default=None, multiple=True,

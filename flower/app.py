@@ -97,6 +97,9 @@ class Flower(tornado.web.Application):
 
     def stop(self):
         if self.started:
+            timer = getattr(self, 'inspect_timer', None)
+            if timer is not None:
+                timer.stop()
             self.events.stop()
             logger.debug("Stopping executors...")
             self.executor.shutdown(wait=False)
