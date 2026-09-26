@@ -799,7 +799,7 @@
             ],
             footerCallback: function( tfoot, data, start, end, display ) {
                 var api = this.api();
-                var columns = {2:"STARTED", 3:"", 4:"FAILURE", 5:"SUCCESS"};
+                var columns = {2:"STARTED", 3:"", 4:"", 5:"FAILURE", 6:"SUCCESS"};
                 for (const [column, state] of Object.entries(columns)) {
                     var total = api.column(column).data().reduce(sum, 0);
                     var footer = total.toLocaleString();
@@ -844,20 +844,27 @@
                 render: taskCountRenderer()
             }, {
                 targets: 4,
+                data: 'queue_length',
+                className: "text-center",
+                width: "10%",
+                defaultContent: 0,
+                render: taskCountRenderer()
+            }, {
+                targets: 5,
                 data: 'task-failed',
                 className: "text-center",
                 width: "10%",
                 defaultContent: 0,
                 render: taskCountRenderer('FAILURE')
             }, {
-                targets: 5,
+                targets: 6,
                 data: 'task-succeeded',
                 className: "text-center",
                 width: "10%",
                 defaultContent: 0,
                 render: taskCountRenderer('SUCCESS')
             }, {
-                targets: 6,
+                targets: 7,
                 data: 'loadavg',
                 width: "18%",
                 className: "text-center text-nowrap",
@@ -890,8 +897,13 @@
 
         var autorefresh_interval = $.urlParam('autorefresh') || 1;
         if (autorefresh !== 0) {
+            var reloading = false;
             setInterval( function () {
-                workersTable.ajax.reload(null, false);
+                if (reloading) return;
+                reloading = true;
+                workersTable.ajax.reload(function () {
+                    reloading = false;
+                }, false);
             }, autorefresh_interval * 1000);
         }
 

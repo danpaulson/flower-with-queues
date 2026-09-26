@@ -85,6 +85,8 @@ class WorkersView(BaseHandler):
             for name in offline_workers:
                 workers.pop(name)
 
+        await self._attach_queue_lengths(workers)
+
         if json:
             self.write({"data": list(workers.values())})
         else:
@@ -92,6 +94,30 @@ class WorkersView(BaseHandler):
                         workers=workers,
                         broker=self.application.broker_uri,
                         autorefresh=1 if self.application.options.auto_refresh else 0)
+
+    async def _attach_queue_lengths(self, workers):
+        """The Queue column: pending messages on the queues each worker consumes.
+
+        Reads the queue names off the CACHED inspector data (``active_queues``,
+        filled by the periodic / on-refresh inspect) and counts messages on the
+        broker directly — one cheap broker call per poll, and never an inspect
+        broadcast: the previous fork inspected every node on every one-second
+        poll, which exhausted the broker connection pool within minutes and hung
+        every inspect behind it (swgoh.gg, 2026-09-26).
+        """
+        try:
+            queue_lengths = {}
+            names = self.get_active_queue_names()
+            if names:
+                stats = await self.get_broker().queues(names)
+                queue_lengths = {q['name']: q.get('messages', 0) or 0 for q in stats}
+            for name, info in workers.items():
+                consumed = [q['name'] for q in self.application.workers.get(name, {}).get('active_queues', [])]
+                info['queue_length'] = sum(queue_lengths.get(q, 0) for q in consumed)
+        except Exception as e:
+            logger.error("Failed to fetch queue lengths: %s", e)
+            for info in workers.values():
+                info.setdefault('queue_length', 0)
 
     @classmethod
     def _as_dict(cls, worker):

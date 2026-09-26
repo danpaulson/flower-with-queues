@@ -46,6 +46,7 @@
           <th class="text-center">Status</th>
           <th class="text-center">Active</th>
           <th class="text-center">Processed</th>
+          <th class="text-center">Queue</th>
           <th class="text-center">Failed</th>
           <th class="text-center">Succeeded</th>
           <th class="text-center">Load Average</th>
@@ -58,6 +59,7 @@
           <td>{{ info.get('status', None) }}</td>
           <td>{{ format_count(info.get('active')) }}</td>
           <td>{{ format_count(info.get('task-received')) }}</td>
+          <td>{{ format_count(info.get('queue_length')) }}</td>
           <td>{{ format_count(info.get('task-failed')) }}</td>
           <td>{{ format_count(info.get('task-succeeded')) }}</td>
           <td>{% raw format_value(info.get('loadavg')) %}</td>
@@ -67,6 +69,7 @@
       <tfoot>
         <tr>
           <th>Total</th>
+          <th></th>
           <th></th>
           <th></th>
           <th></th>
